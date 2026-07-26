@@ -18,7 +18,7 @@
     {
       "binding": "DB",
       "database_name": "link_checker_db",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "database_id": "061e3ca3-ca88-4360-9e38-620b261bfb04",
       "migrations_dir": "migrations"
     }
   ],
