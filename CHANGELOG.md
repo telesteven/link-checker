@@ -7,6 +7,19 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Added
 
+- **User email + logout in header**: `src/App.tsx` now fetches the signed-in
+  user via `GET /api/me` and shows their email plus a "Log out" link
+  (`/cdn-cgi/access/logout`, the standard Cloudflare Access app-logout path)
+  in the top-right of the header.
+- **Light/dark theme toggle**: new `src/useTheme.ts` hook manages theme
+  state (persisted in `localStorage`, falls back to
+  `prefers-color-scheme`), toggled via a sun/moon button in the header.
+  Enabled `darkMode: "class"` in `tailwind.config.js` and added `dark:`
+  variants across `App.tsx`, `JobForm.tsx`, `JobList.tsx`, and
+  `JobDetail.tsx` (backgrounds, borders, text, status badges, table rows,
+  inputs) so all existing UI remains readable/contrast-appropriate in dark
+  mode.
+
 - **Snapshot watermark**: desktop/mobile PNG and PDF snapshots now include a
   thin watermark bar at the bottom of the page showing the source URL,
   requesting user's email, and ISO timestamp of the run

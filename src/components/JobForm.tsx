@@ -38,7 +38,7 @@ export function JobForm({ onCreated }: { onCreated: (jobId: string, message?: st
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4"
+      className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4 dark:border-slate-700 dark:bg-slate-800"
     >
       <div className="flex flex-col sm:flex-row gap-3">
         <input
@@ -47,33 +47,33 @@ export function JobForm({ onCreated }: { onCreated: (jobId: string, message?: st
           placeholder="https://example.com"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:placeholder-slate-500"
         />
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-lg bg-indigo-600 px-6 py-2.5 font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition"
+          className="rounded-lg bg-indigo-600 px-6 py-2.5 font-medium text-white hover:bg-indigo-500 disabled:opacity-50 transition dark:bg-indigo-500 dark:hover:bg-indigo-400"
         >
           {submitting ? "Analyzing..." : "Analyze"}
         </button>
       </div>
-      <div className="flex items-center gap-4 text-sm text-slate-600">
+      <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-300">
         <span className="font-medium">Snapshot formats:</span>
-        <span className="rounded-full bg-slate-100 px-3 py-1">PNG (default)</span>
+        <span className="rounded-full bg-slate-100 px-3 py-1 dark:bg-slate-700 dark:text-slate-200">PNG (default)</span>
         {FORMAT_OPTIONS.map((f) => (
           <label key={f.id} className="flex items-center gap-1.5 cursor-pointer">
             <input
               type="checkbox"
               checked={formats.includes(f.id)}
               onChange={() => toggleFormat(f.id)}
-              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 dark:border-slate-600 dark:bg-slate-900"
             />
             {f.label}
           </label>
         ))}
       </div>
-      {notice && <p className="text-sm text-indigo-600">{notice}</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {notice && <p className="text-sm text-indigo-600 dark:text-indigo-400">{notice}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </form>
   );
 }
