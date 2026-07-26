@@ -20,6 +20,24 @@ Assets) and the JSON API — one `wrangler deploy` ships the whole app.
 - **Auth**: Cloudflare Access (see below)
 - **Retention**: Cron Trigger (daily) purges jobs/snapshots older than 90 days
 
+## Environment variables & secrets checklist
+
+Anyone cloning this repo needs to prepare the following before `deploy`
+works end-to-end (local `dev` works out of the box with no setup, via
+`DEV_BYPASS_AUTH`):
+
+| Name | Type | Where | Required for | Notes |
+|---|---|---|---|---|
+| `database_id` | config value | `wrangler.jsonc` → `d1_databases[0]` | deploy | Output of `wrangler d1 create link_checker_db`. Placeholder: `REPLACE_WITH_D1_DATABASE_ID`. |
+| `CLOUDFLARE_ACCOUNT_ID` | env var (shell) | your shell / CI | `wrangler` commands if you have multiple accounts | `npx wrangler whoami` to check. |
+| `CLOUDFLARE_API_TOKEN` | env var (shell/CI secret) | your shell / GitHub Actions secret | non-interactive/CI deploys | Only needed if you deploy from CI instead of `wrangler login`. Create at https://dash.cloudflare.com/profile/api-tokens with "Edit Cloudflare Workers" template. |
+| `ACCESS_TEAM_DOMAIN` | Worker secret | `wrangler secret put ACCESS_TEAM_DOMAIN` | production auth | e.g. `https://your-team.cloudflareaccess.com`. See step 5. |
+| `ACCESS_AUD` | Worker secret | `wrangler secret put ACCESS_AUD` | production auth | Application Audience (AUD) tag from the Access application. See step 5. |
+| `DEV_BYPASS_AUTH` | Worker var (already set) | `wrangler.jsonc` → `vars` | local dev only | Already `"true"`; flip to `"false"` once Access is wired up for prod. |
+
+Local-only (never commit): copy `.dev.vars.example` to `.dev.vars` if you
+want to test real Access JWTs locally instead of the dev bypass.
+
 ## 1. Install
 
 ```bash
