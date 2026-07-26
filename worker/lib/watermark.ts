@@ -75,7 +75,10 @@ export async function injectWatermark(
 }
 
 export function buildWatermarkText(url: string, userEmail: string, timestampMs: number): string {
-  return `${url}  •  ${userEmail}  •  ${new Date(timestampMs).toISOString()}`;
+  // Replace '@' so macOS Preview/Quick Look doesn't auto-linkify this as a
+  // mailto: link (which was prompting Mail.app to open when viewing the PDF).
+  const safeEmail = userEmail.replace(/@/g, "#");
+  return `${url}  •  ${safeEmail}  •  ${new Date(timestampMs).toISOString()}`;
 }
 
 /** Removes the injected watermark, e.g. before capturing a clean raw-HTML export. */
