@@ -50,8 +50,7 @@
     "DEV_BYPASS_AUTH": "true"
     // ACCESS_TEAM_DOMAIN and ACCESS_AUD are NOT set here — they are secrets.
     // After creating a Cloudflare Access application (see README "Access" section),
-    // each deployer must run:
-    //   npx wrangler secret put ACCESS_TEAM_DOMAIN   (e.g. https://your-team.cloudflareaccess.com)
-    //   npx wrangler secret put ACCESS_AUD           (Application Audience (AUD) tag)
+    // set them in the dashboard (Worker → Settings → Variables and Secrets)
+    // or via `npx wrangler secret put ACCESS_TEAM_DOMAIN` / `ACCESS_AUD`.
   }
 }

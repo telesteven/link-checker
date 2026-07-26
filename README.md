@@ -5,7 +5,9 @@ snapshots — powered entirely by Cloudflare (Workers, D1, R2, Queues, Browser
 Rendering, Access).
 
 Single Cloudflare Worker serves both the React dashboard (Workers Static
-Assets) and the JSON API — one `wrangler deploy` ships the whole app.
+Assets) and the JSON API. **Deployment is handled by Cloudflare Workers
+Builds** (Git integration): push to `main` on GitHub and Cloudflare builds +
+deploys automatically — no local `wrangler deploy`.
 
 ## Stack
 
@@ -22,18 +24,16 @@ Assets) and the JSON API — one `wrangler deploy` ships the whole app.
 
 ## Environment variables & secrets checklist
 
-Anyone cloning this repo needs to prepare the following before `deploy`
-works end-to-end (local `dev` works out of the box with no setup, via
-`DEV_BYPASS_AUTH`):
+Since deploys run inside Cloudflare (via Workers Builds), you do **not** need
+a `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` locally or in GitHub — the
+Cloudflare GitHub App authenticates builds for you. Only these remain:
 
 | Name | Type | Where | Required for | Notes |
 |---|---|---|---|---|
-| `database_id` | config value | `wrangler.jsonc` → `d1_databases[0]` | deploy | Output of `wrangler d1 create link_checker_db`. Placeholder: `REPLACE_WITH_D1_DATABASE_ID`. |
-| `CLOUDFLARE_ACCOUNT_ID` | env var (shell) | your shell / CI | `wrangler` commands if you have multiple accounts | `npx wrangler whoami` to check. |
-| `CLOUDFLARE_API_TOKEN` | env var (shell/CI secret) | your shell / GitHub Actions secret | non-interactive/CI deploys | Only needed if you deploy from CI instead of `wrangler login`. Create at https://dash.cloudflare.com/profile/api-tokens with "Edit Cloudflare Workers" template. |
-| `ACCESS_TEAM_DOMAIN` | Worker secret | `wrangler secret put ACCESS_TEAM_DOMAIN` | production auth | e.g. `https://your-team.cloudflareaccess.com`. See step 5. |
-| `ACCESS_AUD` | Worker secret | `wrangler secret put ACCESS_AUD` | production auth | Application Audience (AUD) tag from the Access application. See step 5. |
-| `DEV_BYPASS_AUTH` | Worker var (already set) | `wrangler.jsonc` → `vars` | local dev only | Already `"true"`; flip to `"false"` once Access is wired up for prod. |
+| `database_id` | config value | `wrangler.jsonc` → `d1_databases[0]` | deploy | Output of `wrangler d1 create link_checker_db`. Placeholder: `REPLACE_WITH_D1_DATABASE_ID`. Commit the real value so Workers Builds picks it up. |
+| `ACCESS_TEAM_DOMAIN` | Worker secret | Dashboard → Worker → Settings → Variables and Secrets (or `wrangler secret put`) | production auth | e.g. `https://your-team.cloudflareaccess.com`. See step 5. |
+| `ACCESS_AUD` | Worker secret | Dashboard → Worker → Settings → Variables and Secrets (or `wrangler secret put`) | production auth | Application Audience (AUD) tag from the Access application. See step 5. |
+| `DEV_BYPASS_AUTH` | Worker var (already set) | `wrangler.jsonc` → `vars` | local dev only | Already `"true"`; flip to `"false"` in `wrangler.jsonc` before merging to `main` once Access is wired up. |
 
 Local-only (never commit): copy `.dev.vars.example` to `.dev.vars` if you
 want to test real Access JWTs locally instead of the dev bypass.
@@ -77,19 +77,39 @@ as `dev@local.test` (`DEV_BYPASS_AUTH=true` in `wrangler.jsonc`) so you don't
 need Access configured to develop.
 
 > Browser Rendering does **not** work in pure local simulation. If a job stays
-> `queued`/errors locally, that's expected — verify the render pipeline by
-> deploying (`npm run deploy`) or using `wrangler dev --remote`.
+> `queued`/errors locally, that's expected — verify the render pipeline once
+> deployed, or use `wrangler dev --remote`.
 
-## 4. Deploy (MVP)
+## 4. Push to GitHub
 
 ```bash
-npm run deploy
+git add -A
+git commit -m "Your change"
+git push
 ```
 
-This runs `vite build` then `wrangler deploy`. The Worker will be live at
-`https://link-checker.<your-subdomain>.workers.dev`.
+`.dev.vars`, `node_modules/`, `dist/`, and `.wrangler/` are gitignored.
+`wrangler.jsonc` (with resource names/IDs) is committed — make sure
+`database_id` is the real value (not the placeholder) before pushing.
 
-## 5. Secure it with Cloudflare Access (before sharing with real users)
+## 5. Connect the repo to Cloudflare Workers Builds (deploy on push)
+
+1. Cloudflare dashboard → **Workers & Pages** → select this Worker (or
+   **Create application** → **Connect to Git** if it doesn't exist yet) →
+   **Settings** → **Builds** → **Connect**.
+2. Authorize the **Cloudflare Workers and Pages** GitHub App for this repo.
+3. Configure the trigger:
+   - **Build command**: `npm run build`
+   - **Deploy command**: `npx wrangler deploy` (default)
+   - **Branch**: `main` → production
+4. Push a commit (or click **Retry**) to trigger the first build. Future
+   pushes to `main` deploy automatically; other branches/PRs get a preview
+   deployment (`wrangler versions upload`).
+
+No local `wrangler deploy` or CI secrets needed — Cloudflare builds and
+deploys directly from GitHub.
+
+## 6. Secure it with Cloudflare Access (before sharing with real users)
 
 1. In Zero Trust dashboard → Access → Applications → **Add an application** →
    Self-hosted, pointing at your Worker's domain (workers.dev URL or a custom
@@ -100,6 +120,8 @@ This runs `vite build` then `wrangler deploy`. The Worker will be live at
    overview page) as Worker vars/secrets, and set `DEV_BYPASS_AUTH` to
    `"false"` in `wrangler.jsonc` for the deployed environment.
 
+Set secrets either via the dashboard (Settings → Variables and Secrets) or:
+
 ```bash
 npx wrangler secret put ACCESS_TEAM_DOMAIN
 npx wrangler secret put ACCESS_AUD
@@ -107,22 +129,6 @@ npx wrangler secret put ACCESS_AUD
 
 Without this step, the app is **unauthenticated** in production (fine for a
 quick personal MVP, not for sharing).
-
-## 6. Push to GitHub (for the team)
-
-```bash
-git init
-git add -A
-git commit -m "Initial Link_checker MVP"
-git branch -M main
-git remote add origin <your-repo-url>
-git push -u origin main
-```
-
-`.dev.vars`, `node_modules/`, `dist/`, and `.wrangler/` are already
-gitignored. `wrangler.jsonc` (with resource names/IDs) is committed — replace
-`REPLACE_WITH_D1_DATABASE_ID` with your real D1 database id before pushing,
-or have each teammate use their own `.dev.vars`/environment.
 
 ## Known MVP simplifications (see PLAN.md for full spec)
 
