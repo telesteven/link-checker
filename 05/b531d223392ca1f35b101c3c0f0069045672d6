@@ -1,0 +1,19 @@
+package-lock.json
+  s_8840322beca83f::t_dbba1a8f2a4048 1-5433
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "05b531d223392ca1f35b101c3c0f0069045672d6",
+  "prompts": {},
+  "sessions": {
+    "s_8840322beca83f": {
+      "agent_id": {
+        "tool": "windsurf",
+        "id": "de173efd-d349-4c83-a20d-c0d62c7f749b",
+        "model": "Claude Sonnet 5 Medium"
+      },
+      "human_author": "Steven <telesteven@gmail.com>"
+    }
+  }
+}
