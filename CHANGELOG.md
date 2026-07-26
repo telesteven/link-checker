@@ -7,6 +7,15 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Snapshot links showed the SPA shell instead of the image**: full-page
+  navigations (e.g. clicking a snapshot link, opening it in a new tab) send
+  `Sec-Fetch-Mode: navigate`, which Workers Static Assets' SPA fallback
+  (`not_found_handling: "single-page-application"`) intercepts and serves
+  `index.html` for — never reaching the Worker's `/api/*` routes. `<img>`
+  previews worked because image loads don't carry that header. Fixed by
+  adding `assets.run_worker_first: ["/api/*"]` in `wrangler.jsonc` so all
+  `/api/*` requests always hit the Worker first, regardless of navigation
+  type.
 - **Stale snapshot bug**: R2 keys for snapshots were static per job ID
   (`snapshots/{jobId}/desktop.png`), so retrying a job overwrote the same
   key while the browser/edge cache (`max-age=3600`) kept serving the old

@@ -5,7 +5,13 @@
   "compatibility_date": "2025-04-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
+    // Without this, full-page navigations to /api/* (e.g. clicking a snapshot
+    // link, opening a CSV export in a new tab) get intercepted by the SPA
+    // fallback and served index.html instead of hitting the Worker — because
+    // those requests carry `Sec-Fetch-Mode: navigate`, which Workers Assets
+    // treats specially under single-page-application routing.
+    "run_worker_first": ["/api/*"]
   },
   "observability": {
     "enabled": true
