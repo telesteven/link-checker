@@ -53,8 +53,15 @@ export async function runJob(env: Env, msg: JobMessage): Promise<void> {
     await injectWatermark(page, watermarkText);
     const desktopPng = await page.screenshot({ fullPage: true, type: "png" });
 
-    // Mobile snapshot (always) — watermarked
+    // Mobile snapshot (always) — watermarked.
+    // NOTE: flipping isMobile false->true makes Puppeteer silently reload the
+    // page internally (see @cloudflare/puppeteer's EmulationManager: changing
+    // `isMobile`/`hasTouch` sets `reloadNeeded`, and setViewport awaits
+    // page.reload()). That reload only waits for the `load` event, so
+    // JS-heavy/hydrating pages can still be visually blank right after this
+    // call returns — wait for network to go idle before capturing.
     await page.setViewport({ width: 375, height: 812, isMobile: true, deviceScaleFactor: 2 });
+    await page.waitForNetworkIdle({ idleTime: 500, timeout: 10000 }).catch(() => {});
     await injectWatermark(page, watermarkText);
     const mobilePng = await page.screenshot({ fullPage: true, type: "png" });
 
