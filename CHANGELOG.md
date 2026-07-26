@@ -5,6 +5,14 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Security
+
+- **Removed `DEV_BYPASS_AUTH`**: dropped the dev-auth fallback in
+  `worker/lib/access.ts` (and the corresponding `Env` field, `wrangler.jsonc`
+  var, and README/`.dev.vars.example` docs). Requests without valid
+  `Cf-Access-*` headers now always get `401 unauthorized` — no bypass
+  identity, in dev or prod.
+
 ### Added
 
 - **User email + logout in header**: `src/App.tsx` now fetches the signed-in

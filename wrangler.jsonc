@@ -51,9 +51,7 @@
     "crons": ["0 3 * * *"]
   },
   "vars": {
-    "ENVIRONMENT": "development",
-    // Set to "false" before deploying for real users (once Access is configured below).
-    "DEV_BYPASS_AUTH": "true"
+    "ENVIRONMENT": "development"
     // ACCESS_TEAM_DOMAIN and ACCESS_AUD are NOT set here — they are secrets.
     // After creating a Cloudflare Access application (see README "Access" section),
     // set them in the dashboard (Worker → Settings → Variables and Secrets)

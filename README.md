@@ -34,10 +34,10 @@ Cloudflare GitHub App authenticates builds for you. Only these remain:
 | `database_id` | config value | `wrangler.jsonc` → `d1_databases[0]` | deploy | Output of `wrangler d1 create link_checker_db`. Placeholder: `REPLACE_WITH_D1_DATABASE_ID`. Commit the real value so Workers Builds picks it up. |
 | `ACCESS_TEAM_DOMAIN` | Worker secret | Dashboard → Worker → Settings → Variables and Secrets (or `wrangler secret put`) | production auth | e.g. `https://your-team.cloudflareaccess.com`. See step 5. |
 | `ACCESS_AUD` | Worker secret | Dashboard → Worker → Settings → Variables and Secrets (or `wrangler secret put`) | production auth | Application Audience (AUD) tag from the Access application. See step 5. |
-| `DEV_BYPASS_AUTH` | Worker var (already set) | `wrangler.jsonc` → `vars` | local dev only | Already `"true"`; flip to `"false"` in `wrangler.jsonc` before merging to `main` once Access is wired up. |
 
-Local-only (never commit): copy `.dev.vars.example` to `.dev.vars` if you
-want to test real Access JWTs locally instead of the dev bypass.
+Local-only (never commit): copy `.dev.vars.example` to `.dev.vars` and fill
+in `ACCESS_TEAM_DOMAIN`/`ACCESS_AUD` to test real Access JWTs locally. There
+is no dev-auth bypass — every request must present valid Access headers.
 
 ## 1. Install
 
@@ -67,15 +67,16 @@ dashboard if not already enabled (Workers & Pages → Browser Rendering).
 ## 3. Local development
 
 ```bash
-cp .dev.vars.example .dev.vars   # optional, only needed once Access is configured
+cp .dev.vars.example .dev.vars   # fill in ACCESS_TEAM_DOMAIN / ACCESS_AUD
 npm run db:migrate:local
 npm run dev
 ```
 
 This starts a single Vite dev server (frontend + Worker via
-`@cloudflare/vite-plugin`) at `http://localhost:5173`. Local dev auto-logs in
-as `dev@local.test` (`DEV_BYPASS_AUTH=true` in `wrangler.jsonc`) so you don't
-need Access configured to develop.
+`@cloudflare/vite-plugin`) at `http://localhost:5173`. There is no auth
+bypass — requests need real `Cf-Access-*` headers, so local dev only works
+end-to-end once Cloudflare Access is configured (step 6) or behind
+`cloudflared access` / a tunnel that injects them.
 
 > Browser Rendering does **not** work in pure local simulation. If a job stays
 > `queued`/errors locally, that's expected — verify the render pipeline once
@@ -118,8 +119,7 @@ deploys directly from GitHub.
 2. Add a policy allowing your team's emails/domain.
 3. Set `ACCESS_TEAM_DOMAIN` (e.g. `https://your-team.cloudflareaccess.com`)
    and `ACCESS_AUD` (the Application Audience Tag, shown in the app's
-   overview page) as Worker vars/secrets, and set `DEV_BYPASS_AUTH` to
-   `"false"` in `wrangler.jsonc` for the deployed environment.
+   overview page) as Worker secrets.
 
 Set secrets either via the dashboard (Settings → Variables and Secrets) or:
 
@@ -128,8 +128,9 @@ npx wrangler secret put ACCESS_TEAM_DOMAIN
 npx wrangler secret put ACCESS_AUD
 ```
 
-Without this step, the app is **unauthenticated** in production (fine for a
-quick personal MVP, not for sharing).
+Without this step (Access app + JWKS verification wired up), or without
+Cloudflare Access sitting in front of the Worker, all requests will be
+rejected with `401 unauthorized` — there is no fallback/bypass identity.
 
 ## Known MVP simplifications (see PLAN.md for full spec)
 

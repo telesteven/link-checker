@@ -9,10 +9,6 @@ import type { Env } from "../types";
  * `Cf-Access-Authenticated-User-Email`. For defense-in-depth, verify the
  * `Cf-Access-Jwt-Assertion` JWT against the team's JWKS when
  * ACCESS_TEAM_DOMAIN + ACCESS_AUD are configured.
- *
- * For local/MVP dev (no Access in front of `wrangler dev` / `vite`),
- * DEV_BYPASS_AUTH=true returns a fixed dev user so the app is usable without
- * a Zero Trust app configured yet.
  */
 export async function requireUser(c: Context<{ Bindings: Env }>): Promise<string | null> {
   const headerEmail = c.req.header("Cf-Access-Authenticated-User-Email");
@@ -28,10 +24,6 @@ export async function requireUser(c: Context<{ Bindings: Env }>): Promise<string
   if (headerEmail) {
     // Access headers present but JWT verification env vars not configured yet.
     return headerEmail;
-  }
-
-  if (c.env.DEV_BYPASS_AUTH === "true") {
-    return "dev@local.test";
   }
 
   return null;

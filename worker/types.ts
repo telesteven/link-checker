@@ -5,7 +5,6 @@ export interface Env {
   BROWSER: Fetcher;
   ASSETS: Fetcher;
   ENVIRONMENT: string;
-  DEV_BYPASS_AUTH?: string;
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
 }
