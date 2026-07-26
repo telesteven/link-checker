@@ -26,6 +26,10 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   not appearing on mobile snapshots: it's now re-injected after every
   `page.setViewport()` call (and again before PDF capture), since some
   sites reflow/rerender on resize and silently drop a one-time injection.
+- **Watermark toned down**: the 24px dense tiled grid was too disruptive.
+  Halved font size to 12px, lightened text to a low-opacity slate grey, and
+  widened tile spacing so an A4-sized page (~794×1123 CSS px) gets roughly
+  2 repeats instead of a dense grid.
 
 ### Fixed
 

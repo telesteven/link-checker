@@ -40,10 +40,12 @@ export async function injectWatermark(
       zIndex: "2147483647",
     } satisfies Partial<CSSStyleDeclaration>);
 
-    // Doubled from the original single-line bar's ~12px baseline.
-    const fontSizePx = 24;
-    const stepX = 380;
-    const stepY = 260;
+    // Shrunk back down (half of the previous 24px) and spaced out so an
+    // A4-sized page (~794 x 1123 CSS px) gets roughly 2 repeats, not a dense
+    // grid — the tiled version at 24px/tight spacing was too disruptive.
+    const fontSizePx = 12;
+    const stepX = 820;
+    const stepY = 560;
 
     for (let y = 0; y < pageHeight + stepY; y += stepY) {
       for (let x = 0; x < pageWidth + stepX; x += stepX) {
@@ -54,14 +56,14 @@ export async function injectWatermark(
           top: `${y}px`,
           left: `${x}px`,
           transform: "translate(-50%, -50%) rotate(45deg)",
-          padding: "6px 14px",
-          border: "1.5px dotted #60a5fa", // light blue (Tailwind blue-400)
-          borderRadius: "4px",
+          padding: "3px 8px",
+          border: "1px dotted rgba(96, 165, 250, 0.55)", // light blue (Tailwind blue-400), softened
+          borderRadius: "3px",
           background: "transparent", // no fill, outline only
-          color: "rgba(107, 114, 128, 0.8)", // grey (Tailwind gray-500)
+          color: "rgba(148, 163, 184, 0.45)", // much lighter grey (Tailwind slate-400, low opacity)
           fontFamily: "ui-monospace, Menlo, Consolas, monospace",
           fontSize: `${fontSizePx}px`,
-          fontWeight: "600",
+          fontWeight: "500",
           whiteSpace: "nowrap",
         } satisfies Partial<CSSStyleDeclaration>);
         container.appendChild(tile);
