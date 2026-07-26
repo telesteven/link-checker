@@ -18,6 +18,14 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   Styled as a light-blue bar (`#bfdbfe` background, `#1e3a8a` text) for
   visibility against most page backgrounds — the initial dark/translucent
   styling was too low-contrast to notice.
+- **Watermark redesign**: replaced the single bottom bar with a tiled,
+  diagonal (45deg, top-left-to-bottom-right) repeating pattern covering the
+  full page — long pages now get multiple repeats instead of just one.
+  Doubled font size (12px → 24px); grey, no-fill text with a light-blue
+  dotted border instead of a solid light-blue bar. Also fixed the watermark
+  not appearing on mobile snapshots: it's now re-injected after every
+  `page.setViewport()` call (and again before PDF capture), since some
+  sites reflow/rerender on resize and silently drop a one-time injection.
 
 ### Fixed
 

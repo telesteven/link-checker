@@ -45,20 +45,25 @@ export async function runJob(env: Env, msg: JobMessage): Promise<void> {
 
     const runTimestamp = now();
     const watermarkText = buildWatermarkText(msg.url, msg.userEmail, runTimestamp);
-    await injectWatermark(page, watermarkText);
 
-    // Desktop snapshot (always) — watermarked
+    // Desktop snapshot (always) — watermarked. Inject *after* setting the
+    // viewport, and again after the next setViewport call below — sites can
+    // reflow/rerender on resize and silently drop a one-time injection.
     await page.setViewport({ width: 1280, height: 800 });
+    await injectWatermark(page, watermarkText);
     const desktopPng = await page.screenshot({ fullPage: true, type: "png" });
 
     // Mobile snapshot (always) — watermarked
     await page.setViewport({ width: 375, height: 812, isMobile: true, deviceScaleFactor: 2 });
+    await injectWatermark(page, watermarkText);
     const mobilePng = await page.screenshot({ fullPage: true, type: "png" });
 
     let pdfBuf: Uint8Array | null = null;
     let htmlStr: string | null = null;
     if (msg.formats.includes("pdf")) {
-      // PDF is a visual snapshot too — keep the watermark.
+      // PDF is a visual snapshot too — keep the watermark. Re-inject since
+      // the mobile viewport/resize above may have altered the page.
+      await injectWatermark(page, watermarkText);
       pdfBuf = await page.pdf({ printBackground: true, preferCSSPageSize: true });
     }
     if (msg.formats.includes("html")) {

@@ -1,53 +1,74 @@
 /**
- * Injects a small, unobtrusive watermark bar (URL, user email, timestamp)
- * into the page before it's screenshotted, so exported snapshots are
- * traceable to who requested them, from where, and when.
+ * Injects a tiled, diagonal watermark (URL, user email, timestamp) across the
+ * whole page before it's screenshotted, so exported snapshots are traceable
+ * to who requested them, from where, and when.
  *
  * Implementation notes:
- * - Appended directly to `document.body` with `position: absolute; bottom: 0`
- *   (not `fixed`) and no positioned ancestor assumed, so it anchors to the
- *   bottom of the full page's content box rather than the visible viewport.
- *   This means it renders once, in the correct place, in Puppeteer's
- *   `fullPage` screenshots — `position: fixed` elements are prone to being
- *   duplicated/stretched across full-page screenshots.
- * - Kept short, semi-transparent, and pinned to a thin strip at the very
- *   bottom edge so it never covers meaningful page content.
+ * - Tiles are laid out in a grid covering the full scrollable page (not just
+ *   the viewport), so long pages get multiple repeats of the watermark
+ *   rather than just one at the top or bottom.
+ * - Each tile is rotated 45deg (top-left -> bottom-right diagonal), styled
+ *   as outlined-only text (grey, transparent fill) with a light-blue dotted
+ *   border, so it reads clearly without blocking underlying content.
+ * - Call this again after every `page.setViewport(...)` (and again before
+ *   `page.pdf()`), not just once — many sites reflow/rerender on resize,
+ *   which can silently drop a one-time injection (this was the mobile bug:
+ *   the watermark injected for desktop was gone after switching to the
+ *   mobile viewport). Re-injecting also lets tile coverage match each
+ *   viewport's own (often much taller, for mobile) document height.
  */
 export async function injectWatermark(
   page: { evaluate: (fn: (text: string) => void, arg: string) => Promise<unknown> },
   text: string
 ): Promise<void> {
   await page.evaluate((watermarkText: string) => {
-    const WATERMARK_ID = "__link_checker_watermark__";
-    document.getElementById(WATERMARK_ID)?.remove();
+    const CONTAINER_ID = "__link_checker_watermark__";
+    document.getElementById(CONTAINER_ID)?.remove();
 
-    const el = document.createElement("div");
-    el.id = WATERMARK_ID;
-    el.textContent = watermarkText;
-    Object.assign(el.style, {
+    const container = document.createElement("div");
+    container.id = CONTAINER_ID;
+    const pageWidth = Math.max(document.documentElement.scrollWidth, window.innerWidth);
+    const pageHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight);
+    Object.assign(container.style, {
       position: "absolute",
+      top: "0",
       left: "0",
-      bottom: "0",
-      width: "100%",
-      boxSizing: "border-box",
-      margin: "0",
-      padding: "4px 10px",
-      background: "rgba(191, 219, 254, 0.92)", // light blue (Tailwind blue-200), high visibility
-      color: "#1e3a8a", // blue-900, strong contrast against the light blue bar
-      fontFamily: "ui-monospace, Menlo, Consolas, monospace",
-      fontSize: "12px",
-      fontWeight: "600",
-      lineHeight: "1.4",
-      letterSpacing: "0.01em",
-      borderTop: "1px solid rgba(30, 58, 138, 0.35)",
-      zIndex: "2147483647",
+      width: `${pageWidth}px`,
+      height: `${pageHeight}px`,
+      overflow: "visible",
       pointerEvents: "none",
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
+      zIndex: "2147483647",
     } satisfies Partial<CSSStyleDeclaration>);
 
-    document.body.appendChild(el);
+    // Doubled from the original single-line bar's ~12px baseline.
+    const fontSizePx = 24;
+    const stepX = 380;
+    const stepY = 260;
+
+    for (let y = 0; y < pageHeight + stepY; y += stepY) {
+      for (let x = 0; x < pageWidth + stepX; x += stepX) {
+        const tile = document.createElement("div");
+        tile.textContent = watermarkText;
+        Object.assign(tile.style, {
+          position: "absolute",
+          top: `${y}px`,
+          left: `${x}px`,
+          transform: "translate(-50%, -50%) rotate(45deg)",
+          padding: "6px 14px",
+          border: "1.5px dotted #60a5fa", // light blue (Tailwind blue-400)
+          borderRadius: "4px",
+          background: "transparent", // no fill, outline only
+          color: "rgba(107, 114, 128, 0.8)", // grey (Tailwind gray-500)
+          fontFamily: "ui-monospace, Menlo, Consolas, monospace",
+          fontSize: `${fontSizePx}px`,
+          fontWeight: "600",
+          whiteSpace: "nowrap",
+        } satisfies Partial<CSSStyleDeclaration>);
+        container.appendChild(tile);
+      }
+    }
+
+    document.body.appendChild(container);
   }, text);
 }
 
