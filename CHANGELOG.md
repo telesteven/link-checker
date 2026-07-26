@@ -33,6 +33,15 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Fixed
 
+- **Raw HTML export (`page.html`) was broken/unstyled when viewed** — icons
+  rendered huge and layout was misaligned. Root cause: sites commonly use
+  root-relative or relative URLs for CSS/fonts/images (e.g.
+  `/_astro/fonts/x.woff2`); those resolve fine on the live page, but once
+  the serialized HTML is viewed from our own domain, they 404, breaking all
+  styling and leaving unstyled elements/icons at intrinsic (often huge)
+  sizes. Fixed by injecting a `<base href="{original url}">` tag before
+  calling `page.content()`, so relative resources keep resolving back to
+  the source site (`worker/lib/runJob.ts`).
 - **Snapshot links showed the SPA shell instead of the image**: full-page
   navigations (e.g. clicking a snapshot link, opening it in a new tab) send
   `Sec-Fetch-Mode: navigate`, which Workers Static Assets' SPA fallback

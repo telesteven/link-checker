@@ -69,6 +69,20 @@ export async function runJob(env: Env, msg: JobMessage): Promise<void> {
     if (msg.formats.includes("html")) {
       // Raw HTML export should reflect the actual page source, not our overlay.
       await removeWatermark(page);
+      // Most sites use root-relative or relative URLs for CSS/fonts/images
+      // (e.g. "/_astro/fonts/x.woff2"). Those resolve fine in the live page,
+      // but once serialized and viewed from our own domain (or a local
+      // file), they 404 — breaking all styling and leaving icons/images at
+      // unstyled intrinsic sizes. Inject a <base> tag so they keep
+      // resolving back to the original site.
+      await page.evaluate((sourceUrl: string) => {
+        let base = document.head.querySelector("base");
+        if (!base) {
+          base = document.createElement("base");
+          document.head.insertBefore(base, document.head.firstChild);
+        }
+        base.href = sourceUrl;
+      }, msg.url);
       htmlStr = await page.content();
     }
 
