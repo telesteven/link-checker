@@ -5,6 +5,17 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added
+
+- **Snapshot watermark**: desktop/mobile PNG and PDF snapshots now include a
+  thin, semi-transparent watermark bar at the bottom of the page showing the
+  source URL, requesting user's email, and ISO timestamp of the run
+  (`worker/lib/watermark.ts`). Injected as a DOM overlay before capture so it
+  doesn't alter layout; positioned at the true bottom of the full page
+  (not viewport-fixed) so it renders once, correctly, in `fullPage`
+  screenshots. The raw HTML export (`page.html`) has the watermark stripped
+  before capture so it stays a clean copy of the actual page source.
+
 ### Fixed
 
 - **Snapshot links showed the SPA shell instead of the image**: full-page

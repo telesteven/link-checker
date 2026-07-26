@@ -3,6 +3,7 @@ import type { Env, JobMessage } from "../types";
 import { isInternalLink, isSafeFetchTarget, rootDomain } from "./domain";
 import { checkLinkStatuses } from "./linkStatus";
 import { buildSnapshotKey } from "./snapshotKey";
+import { buildWatermarkText, injectWatermark, removeWatermark } from "./watermark";
 
 interface RawLink {
   href: string;
@@ -42,27 +43,33 @@ export async function runJob(env: Env, msg: JobMessage): Promise<void> {
     const uniqueHrefs = Array.from(dedup.keys());
     const statuses = await checkLinkStatuses(uniqueHrefs);
 
-    // Desktop snapshot (always)
+    const runTimestamp = now();
+    const watermarkText = buildWatermarkText(msg.url, msg.userEmail, runTimestamp);
+    await injectWatermark(page, watermarkText);
+
+    // Desktop snapshot (always) — watermarked
     await page.setViewport({ width: 1280, height: 800 });
     const desktopPng = await page.screenshot({ fullPage: true, type: "png" });
 
-    // Mobile snapshot (always)
+    // Mobile snapshot (always) — watermarked
     await page.setViewport({ width: 375, height: 812, isMobile: true, deviceScaleFactor: 2 });
     const mobilePng = await page.screenshot({ fullPage: true, type: "png" });
 
     let pdfBuf: Uint8Array | null = null;
     let htmlStr: string | null = null;
     if (msg.formats.includes("pdf")) {
+      // PDF is a visual snapshot too — keep the watermark.
       pdfBuf = await page.pdf({ printBackground: true, preferCSSPageSize: true });
     }
     if (msg.formats.includes("html")) {
+      // Raw HTML export should reflect the actual page source, not our overlay.
+      await removeWatermark(page);
       htmlStr = await page.content();
     }
 
     await browser.close();
     browser = undefined;
 
-    const runTimestamp = now();
     const desktopKey = buildSnapshotKey(msg.url, runTimestamp, "desktop.png");
     const mobileKey = buildSnapshotKey(msg.url, runTimestamp, "mobile.png");
     await env.SNAPSHOTS.put(desktopKey, desktopPng as unknown as ArrayBuffer, {

@@ -18,7 +18,8 @@ deploys automatically — no local `wrangler deploy`.
 - **Storage**: R2 (`link-checker-snapshots`)
 - **Async jobs**: Queues (`link-checker-jobs`), consumed in `worker/index.ts`
 - **Rendering**: Browser Rendering (`@cloudflare/puppeteer`) in
-  `worker/lib/runJob.ts`
+  `worker/lib/runJob.ts`, with a URL/user/timestamp watermark
+  (`worker/lib/watermark.ts`) baked into PNG/PDF snapshots
 - **Auth**: Cloudflare Access (see below)
 - **Retention**: Cron Trigger (daily) purges jobs/snapshots older than 90 days
 
