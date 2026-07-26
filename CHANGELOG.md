@@ -8,13 +8,16 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 ### Added
 
 - **Snapshot watermark**: desktop/mobile PNG and PDF snapshots now include a
-  thin, semi-transparent watermark bar at the bottom of the page showing the
-  source URL, requesting user's email, and ISO timestamp of the run
+  thin watermark bar at the bottom of the page showing the source URL,
+  requesting user's email, and ISO timestamp of the run
   (`worker/lib/watermark.ts`). Injected as a DOM overlay before capture so it
   doesn't alter layout; positioned at the true bottom of the full page
   (not viewport-fixed) so it renders once, correctly, in `fullPage`
   screenshots. The raw HTML export (`page.html`) has the watermark stripped
   before capture so it stays a clean copy of the actual page source.
+  Styled as a light-blue bar (`#bfdbfe` background, `#1e3a8a` text) for
+  visibility against most page backgrounds — the initial dark/translucent
+  styling was too low-contrast to notice.
 
 ### Fixed
 
