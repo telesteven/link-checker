@@ -1,0 +1,35 @@
+{
+  "name": "link-checker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite build && vite preview",
+    "deploy": "vite build && wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply link_checker_db --local",
+    "db:migrate:remote": "wrangler d1 migrations apply link_checker_db --remote"
+  },
+  "dependencies": {
+    "hono": "^4.6.14",
+    "jose": "^5.9.6",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@cloudflare/puppeteer": "^0.0.14",
+    "@cloudflare/vite-plugin": "^1.0.0",
+    "@cloudflare/workers-types": "^5.20260722.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "wrangler": "^4.0.0"
+  }
+}

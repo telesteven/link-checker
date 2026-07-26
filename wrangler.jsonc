@@ -1,0 +1,50 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "link-checker",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "browser": {
+    "binding": "BROWSER"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "link_checker_db",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "SNAPSHOTS",
+      "bucket_name": "link-checker-snapshots"
+    }
+  ],
+  "queues": {
+    "producers": [
+      { "binding": "JOB_QUEUE", "queue": "link-checker-jobs" }
+    ],
+    "consumers": [
+      {
+        "queue": "link-checker-jobs",
+        "max_batch_size": 1,
+        "max_batch_timeout": 5,
+        "max_retries": 2
+      }
+    ]
+  },
+  "triggers": {
+    "crons": ["0 3 * * *"]
+  },
+  "vars": {
+    "ENVIRONMENT": "development",
+    "DEV_BYPASS_AUTH": "true"
+  }
+}
