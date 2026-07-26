@@ -5,7 +5,25 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Stale snapshot bug**: R2 keys for snapshots were static per job ID
+  (`snapshots/{jobId}/desktop.png`), so retrying a job overwrote the same
+  key while the browser/edge cache (`max-age=3600`) kept serving the old
+  image — clicking a snapshot could show stale content. Fixed by giving
+  every job run a unique, timestamped key (see below), so the cache
+  collision can no longer happen.
+
+### Added
+
+- `worker/lib/snapshotKey.ts`: builds organized R2 keys as
+  `snapshots/<normalized-url>/<ISO-timestamp>-<file>`, grouping all runs of
+  the same URL together while keeping each run's files unique.
+
 ### Changed
+
+- Snapshot `Cache-Control` bumped to `private, max-age=31536000, immutable`
+  now that keys are content-unique per run.
 
 - **Deployment model switched to Cloudflare Workers Builds (Git integration).**
   Pushing to `main` on GitHub now triggers Cloudflare to build

@@ -2,6 +2,7 @@ import puppeteer from "@cloudflare/puppeteer";
 import type { Env, JobMessage } from "../types";
 import { isInternalLink, isSafeFetchTarget, rootDomain } from "./domain";
 import { checkLinkStatuses } from "./linkStatus";
+import { buildSnapshotKey } from "./snapshotKey";
 
 interface RawLink {
   href: string;
@@ -61,8 +62,9 @@ export async function runJob(env: Env, msg: JobMessage): Promise<void> {
     await browser.close();
     browser = undefined;
 
-    const desktopKey = `snapshots/${msg.jobId}/desktop.png`;
-    const mobileKey = `snapshots/${msg.jobId}/mobile.png`;
+    const runTimestamp = now();
+    const desktopKey = buildSnapshotKey(msg.url, runTimestamp, "desktop.png");
+    const mobileKey = buildSnapshotKey(msg.url, runTimestamp, "mobile.png");
     await env.SNAPSHOTS.put(desktopKey, desktopPng as unknown as ArrayBuffer, {
       httpMetadata: { contentType: "image/png" },
     });
@@ -73,13 +75,13 @@ export async function runJob(env: Env, msg: JobMessage): Promise<void> {
     let pdfKey: string | null = null;
     let htmlKey: string | null = null;
     if (pdfBuf) {
-      pdfKey = `snapshots/${msg.jobId}/page.pdf`;
+      pdfKey = buildSnapshotKey(msg.url, runTimestamp, "page.pdf");
       await env.SNAPSHOTS.put(pdfKey, pdfBuf as unknown as ArrayBuffer, {
         httpMetadata: { contentType: "application/pdf" },
       });
     }
     if (htmlStr) {
-      htmlKey = `snapshots/${msg.jobId}/page.html`;
+      htmlKey = buildSnapshotKey(msg.url, runTimestamp, "page.html");
       await env.SNAPSHOTS.put(htmlKey, htmlStr, {
         httpMetadata: { contentType: "text/html; charset=utf-8" },
       });

@@ -40,7 +40,9 @@ snapshotsRoute.get("/:id/:variant", async (c) => {
   return new Response(object.body, {
     headers: {
       "Content-Type": VARIANT_CONTENT_TYPE[variant] ?? "application/octet-stream",
-      "Cache-Control": "private, max-age=3600",
+      // Keys are unique per job run (URL folder + ISO timestamp), so content
+      // at a given URL never changes — safe to cache long-term.
+      "Cache-Control": "private, max-age=31536000, immutable",
     },
   });
 });
